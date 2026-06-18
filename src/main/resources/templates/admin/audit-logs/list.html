@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('감사 로그')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: sidebar(${menus}, '/admin/audit-logs')}"></div>
+<div th:replace="~{fragments/layout :: topbar('감사 로그', ${currentUser})}"></div>
+
+<main id="main">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="page-title mb-0"><i class="bi bi-journal-text me-2 text-primary"></i>감사 로그 (Audit Log)</div>
+  </div>
+
+  <!-- 검색 -->
+  <div class="card mb-3">
+    <div class="card-body py-3 px-4">
+      <form th:action="@{/admin/audit-logs}" method="get" class="d-flex gap-2 align-items-center">
+        <div class="input-group" style="max-width:360px;">
+          <span class="input-group-text"><i class="bi bi-search text-muted"></i></span>
+          <input type="text" name="username" class="form-control"
+                 th:value="${searchUsername}" placeholder="사용자 아이디로 검색"/>
+        </div>
+        <button type="submit" class="btn btn-primary">검색</button>
+        <a th:href="@{/admin/audit-logs}" class="btn btn-outline-secondary">초기화</a>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header py-3 px-4 d-flex align-items-center justify-content-between">
+      <span class="fw-semibold small">
+        총 <strong th:text="${logs != null ? logs.size() : 0}">0</strong>건
+      </span>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th class="px-4">ID</th>
+              <th>시각</th>
+              <th>사용자</th>
+              <th>액션</th>
+              <th>대상 유형</th>
+              <th>대상 ID</th>
+              <th>상세 내용</th>
+              <th>IP 주소</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="log : ${logs}">
+              <td class="px-4 text-muted small" th:text="${log.id}">-</td>
+              <td class="small text-muted" th:text="${log.createdAt != null ? #temporals.format(log.createdAt,'yyyy-MM-dd HH:mm:ss') : '-'}">-</td>
+              <td>
+                <span class="badge bg-secondary" th:text="${log.username}">-</span>
+              </td>
+              <td>
+                <span class="badge"
+                      th:classappend="${log.action == 'CREATE'} ? 'bg-success' :
+                                       (${log.action == 'DELETE'} ? 'bg-danger' :
+                                       (${log.action == 'UPDATE'} ? 'bg-warning text-dark' : 'bg-primary'))"
+                      th:text="${log.action}">-</span>
+              </td>
+              <td>
+                <span class="badge bg-light text-dark border" th:text="${log.targetType}">-</span>
+              </td>
+              <td class="small text-muted" th:text="${log.targetId}">-</td>
+              <td class="small" th:text="${log.detail}">-</td>
+              <td class="small text-muted font-monospace" th:text="${log.ipAddress}">-</td>
+            </tr>
+            <tr th:if="${logs == null or logs.isEmpty()}">
+              <td colspan="8" class="text-center text-muted py-5">
+                <i class="bi bi-journal-x fs-2 d-block mb-2 text-muted"></i>
+                감사 로그가 없습니다.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

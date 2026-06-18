@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('메뉴 권한 관리')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: sidebar(${menus}, '/admin/menus')}"></div>
+<div th:replace="~{fragments/layout :: topbar('메뉴 권한 관리', ${currentUser})}"></div>
+
+<main id="main">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="page-title mb-0"><i class="bi bi-menu-button-wide me-2 text-primary"></i>메뉴 권한 관리</div>
+    <a th:href="@{/admin/menus/new}" class="btn btn-primary">
+      <i class="bi bi-plus-lg me-1"></i> 메뉴 추가
+    </a>
+  </div>
+
+  <div class="card">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th class="px-4">ID</th>
+              <th>메뉴명</th>
+              <th>URL</th>
+              <th>아이콘</th>
+              <th>상위 메뉴</th>
+              <th>정렬</th>
+              <th class="text-center">관리</th>
+            </tr>
+          </thead>
+          <tbody>
+            <th:block th:each="m : ${allMenus}" th:if="${m.parentId == null}">
+              <tr class="table-light">
+                <td class="px-4 text-muted small" th:text="${m.id}">-</td>
+                <td>
+                  <i class="bi me-1 text-primary" th:classappend="${m.icon}"></i>
+                  <span class="fw-semibold" th:text="${m.name}">-</span>
+                </td>
+                <td class="text-muted small font-monospace" th:text="${m.url != null ? m.url : '(그룹)'}">-</td>
+                <td><code class="small" th:text="${m.icon}">-</code></td>
+                <td class="text-muted small">최상위</td>
+                <td class="text-muted small" th:text="${m.sortOrder}">0</td>
+                <td class="text-center">
+                  <a th:href="@{/admin/menus/{id}/edit(id=${m.id})}" class="btn btn-sm btn-outline-primary me-1">
+                    <i class="bi bi-pencil"></i>
+                  </a>
+                  <form th:action="@{/admin/menus/{id}/delete(id=${m.id})}" method="post" class="d-inline"
+                        onsubmit="return confirm('하위 메뉴도 함께 삭제됩니다. 계속하시겠습니까?')">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              <th:block th:each="sub : ${allMenus}" th:if="${sub.parentId == m.id}">
+                <tr>
+                  <td class="px-4 text-muted small" th:text="${sub.id}">-</td>
+                  <td>
+                    <span class="text-muted me-2">└</span>
+                    <i class="bi me-1 text-secondary" th:classappend="${sub.icon}"></i>
+                    <span th:text="${sub.name}">-</span>
+                  </td>
+                  <td class="text-muted small font-monospace" th:text="${sub.url}">-</td>
+                  <td><code class="small" th:text="${sub.icon}">-</code></td>
+                  <td class="text-muted small" th:text="${m.name}">-</td>
+                  <td class="text-muted small" th:text="${sub.sortOrder}">0</td>
+                  <td class="text-center">
+                    <a th:href="@{/admin/menus/{id}/edit(id=${sub.id})}" class="btn btn-sm btn-outline-primary me-1">
+                      <i class="bi bi-pencil"></i>
+                    </a>
+                    <form th:action="@{/admin/menus/{id}/delete(id=${sub.id})}" method="post" class="d-inline"
+                          onsubmit="return confirm('정말 삭제하시겠습니까?')">
+                      <button type="submit" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+              </th:block>
+            </th:block>
+            <tr th:if="${allMenus == null or allMenus.isEmpty()}">
+              <td colspan="7" class="text-center text-muted py-4">등록된 메뉴가 없습니다.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

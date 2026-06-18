@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('메뉴 등록/수정')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: sidebar(${menus}, '/admin/menus')}"></div>
+<div th:replace="~{fragments/layout :: topbar('메뉴 등록/수정', ${currentUser})}"></div>
+
+<main id="main">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="page-title mb-0">
+      <i class="bi bi-menu-button-wide me-2 text-primary"></i>
+      <span th:text="${menu.id != null} ? '메뉴 수정' : '메뉴 등록'">메뉴 등록</span>
+    </div>
+    <a th:href="@{/admin/menus}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left me-1"></i> 목록
+    </a>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-lg-7">
+      <div class="card">
+        <div class="card-body p-4">
+          <form th:action="${menu.id != null} ? @{/admin/menus/{id}(id=${menu.id})} : @{/admin/menus}"
+                method="post">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">메뉴명 <span class="text-danger">*</span></label>
+                <input type="text" name="name" class="form-control"
+                       th:value="${menu.name}" required placeholder="예) 사용자 관리"/>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">URL</label>
+                <input type="text" name="url" class="form-control font-monospace"
+                       th:value="${menu.url}" placeholder="/admin/users (그룹이면 비워두세요)"/>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">아이콘</label>
+                <div class="input-group">
+                  <span class="input-group-text" id="icon-preview">
+                    <i class="bi" th:classappend="${menu.icon}" id="icon-display"></i>
+                  </span>
+                  <input type="text" name="icon" id="icon-input" class="form-control font-monospace"
+                         th:value="${menu.icon}" placeholder="bi-person"/>
+                </div>
+                <div class="form-text">
+                  <a href="https://icons.getbootstrap.com" target="_blank">Bootstrap Icons</a> 클래스명 입력
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">상위 메뉴</label>
+                <select name="parentId" class="form-select">
+                  <option value="">-- 최상위 메뉴 --</option>
+                  <option th:each="m : ${allMenus}"
+                          th:if="${menu.id == null or m.id != menu.id}"
+                          th:value="${m.id}"
+                          th:text="${m.name}"
+                          th:selected="${m.id == menu.parentId}">메뉴</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">정렬 순서</label>
+                <input type="number" name="sortOrder" class="form-control"
+                       th:value="${menu.sortOrder}" min="0"/>
+              </div>
+            </div>
+
+            <hr class="my-4"/>
+            <!-- 역할 권한 -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold">접근 허용 역할</label>
+              <div class="d-flex flex-wrap gap-3 mt-1">
+                <div class="form-check" th:each="role : ${roles}">
+                  <input class="form-check-input" type="checkbox"
+                         name="roleIds" th:value="${role.id}"
+                         th:id="'role-' + ${role.id}"
+                         th:checked="${menuRoleIds != null and #lists.contains(menuRoleIds, role.id)}"/>
+                  <label class="form-check-label" th:for="'role-' + ${role.id}">
+                    <span class="badge bg-dark font-monospace" th:text="${role.name}">-</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="d-flex gap-2 justify-content-end">
+              <a th:href="@{/admin/menus}" class="btn btn-outline-secondary">취소</a>
+              <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-lg me-1"></i>
+                <span th:text="${menu.id != null} ? '수정 완료' : '등록 완료'">저장</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- 아이콘 미리보기 패널 -->
+    <div class="col-lg-5">
+      <div class="card">
+        <div class="card-header py-3 px-4">
+          <span class="fw-semibold small"><i class="bi bi-grid me-1"></i>자주 쓰는 아이콘</span>
+        </div>
+        <div class="card-body">
+          <div class="d-flex flex-wrap gap-2">
+            <th:block th:each="ic : ${ {'bi-speedometer2','bi-people','bi-person','bi-diagram-3',
+              'bi-shield','bi-journal-text','bi-person-badge','bi-clock','bi-calendar3',
+              'bi-cash-stack','bi-file-earmark-check','bi-inbox','bi-megaphone',
+              'bi-folder','bi-question-circle','bi-gear','bi-house','bi-graph-up'} }">
+              <button type="button" class="btn btn-outline-secondary btn-sm icon-pick"
+                      th:data-icon="${ic}" style="width:44px;height:44px;"
+                      th:title="${ic}">
+                <i class="bi" th:classappend="${ic}"></i>
+              </button>
+            </th:block>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+<script>
+  // 아이콘 미리보기
+  document.getElementById('icon-input').addEventListener('input', function () {
+    const el = document.getElementById('icon-display');
+    el.className = 'bi ' + this.value;
+  });
+  // 아이콘 클릭 선택
+  document.querySelectorAll('.icon-pick').forEach(btn => {
+    btn.addEventListener('click', function () {
+      const icon = this.dataset.icon;
+      const input = document.getElementById('icon-input');
+      input.value = icon;
+      document.getElementById('icon-display').className = 'bi ' + icon;
+    });
+  });
+</script>
+</body>
+</html>

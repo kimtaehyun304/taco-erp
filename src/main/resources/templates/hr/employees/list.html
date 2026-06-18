@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('직원 관리')}"></head>
+<body>
+<div th:replace="~{fragments/layout :: sidebar(${menus}, '/hr/employees')}"></div>
+<div th:replace="~{fragments/layout :: topbar('직원 관리', ${currentUser})}"></div>
+<main id="main">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="page-title mb-0"><i class="bi bi-person-lines-fill me-2 text-primary"></i>직원 관리</div>
+    <a th:href="@{/hr/employees/new}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>직원 등록</a>
+  </div>
+
+  <!-- 검색 -->
+  <div class="card mb-3">
+    <div class="card-body py-3 px-4">
+      <form th:action="@{/hr/employees}" method="get" class="d-flex gap-2 flex-wrap">
+        <div class="input-group" style="max-width:280px;">
+          <span class="input-group-text"><i class="bi bi-search text-muted"></i></span>
+          <input type="text" name="keyword" class="form-control" th:value="${keyword}" placeholder="이름 검색"/>
+        </div>
+        <select name="status" class="form-select" style="max-width:160px;">
+          <option value="">전체 상태</option>
+          <option value="ACTIVE"   th:selected="${status=='ACTIVE'}">재직</option>
+          <option value="RESIGNED" th:selected="${status=='RESIGNED'}">퇴직</option>
+          <option value="LEAVE"    th:selected="${status=='LEAVE'}">휴직</option>
+        </select>
+        <button type="submit" class="btn btn-primary">검색</button>
+        <a th:href="@{/hr/employees}" class="btn btn-outline-secondary">초기화</a>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th class="px-4">사번</th>
+              <th>이름</th>
+              <th>부서</th>
+              <th>직급</th>
+              <th>입사일</th>
+              <th>상태</th>
+              <th class="text-center">관리</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="emp : ${employees}">
+              <td class="px-4 font-monospace small" th:text="${emp.employeeNo}">-</td>
+              <td>
+                <a th:href="@{/hr/employees/{id}(id=${emp.id})}" class="text-decoration-none fw-semibold"
+                   th:text="${emp.name}">-</a>
+              </td>
+              <td class="small">
+                <span th:each="d : ${departments}" th:if="${d.id == emp.departmentId}" th:text="${d.name}">-</span>
+              </td>
+              <td class="small">
+                <span th:each="p : ${positions}" th:if="${p.id == emp.positionId}"
+                      th:text="${p.name}" class="badge bg-light text-dark">-</span>
+              </td>
+              <td class="small text-muted" th:text="${emp.hireDate}">-</td>
+              <td>
+                <span th:switch="${emp.status}">
+                  <span th:case="'ACTIVE'"   class="badge bg-success">재직</span>
+                  <span th:case="'RESIGNED'" class="badge bg-secondary">퇴직</span>
+                  <span th:case="'LEAVE'"    class="badge bg-warning text-dark">휴직</span>
+                  <span th:case="*"          class="badge bg-light text-dark" th:text="${emp.status}">-</span>
+                </span>
+              </td>
+              <td class="text-center">
+                <a th:href="@{/hr/employees/{id}/edit(id=${emp.id})}" class="btn btn-sm btn-outline-primary me-1">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                <form th:action="@{/hr/employees/{id}/delete(id=${emp.id})}" method="post" class="d-inline"
+                      onsubmit="return confirm('정말 삭제하시겠습니까?')">
+                  <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                </form>
+              </td>
+            </tr>
+            <tr th:if="${employees == null or employees.isEmpty()}">
+              <td colspan="7" class="text-center text-muted py-5">
+                <i class="bi bi-people fs-2 d-block mb-2"></i>등록된 직원이 없습니다.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

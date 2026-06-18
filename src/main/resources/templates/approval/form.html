@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('기안 작성')}"></head>
+<body>
+<div th:replace="~{fragments/layout :: sidebar(${menus}, '/approval/new')}"></div>
+<div th:replace="~{fragments/layout :: topbar('기안 작성', ${currentUser})}"></div>
+<main id="main">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="page-title mb-0"><i class="bi bi-file-earmark-plus me-2 text-primary"></i>기안 작성</div>
+    <a th:href="@{/approval/drafts}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left me-1"></i>기안함
+    </a>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-header py-3 px-4 fw-semibold">문서 내용</div>
+        <div class="card-body p-4">
+          <form th:action="@{/approval}" method="post" id="approvalForm">
+            <div class="mb-3">
+              <label class="form-label fw-semibold">문서 유형 <span class="text-danger">*</span></label>
+              <select name="documentType" class="form-select" required>
+                <option value="">-- 선택 --</option>
+                <option value="GENERAL">일반기안</option>
+                <option value="LEAVE">휴가신청</option>
+                <option value="EXPENSE">경비지출</option>
+                <option value="PURCHASE">구매요청</option>
+                <option value="REPORT">보고서</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">제목 <span class="text-danger">*</span></label>
+              <input type="text" name="title" class="form-control" required placeholder="문서 제목을 입력하세요"/>
+            </div>
+            <div class="mb-4">
+              <label class="form-label fw-semibold">내용</label>
+              <textarea name="content" class="form-control" rows="12"
+                        placeholder="문서 내용을 입력하세요..."></textarea>
+            </div>
+
+            <!-- 결재선 (hidden inputs, JS로 추가) -->
+            <div id="approver-inputs"></div>
+
+            <div class="d-flex gap-2 justify-content-end">
+              <a th:href="@{/approval/drafts}" class="btn btn-outline-secondary">취소</a>
+              <button type="submit" class="btn btn-primary">
+                <i class="bi bi-send me-1"></i>기안 제출
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- 결재선 설정 -->
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-header py-3 px-4 fw-semibold">
+          <i class="bi bi-people me-1"></i>결재선 설정
+        </div>
+        <div class="card-body p-3">
+          <div class="mb-3">
+            <select id="approverSelect" class="form-select form-select-sm">
+              <option value="">결재자 선택</option>
+              <option th:each="u : ${users}" th:value="${u.id}"
+                      th:text="${u.name} + ' (' + ${u.username} + ')'">사용자</option>
+            </select>
+          </div>
+          <button type="button" class="btn btn-outline-primary btn-sm w-100 mb-3"
+                  onclick="addApprover()">
+            <i class="bi bi-plus-lg me-1"></i>결재자 추가
+          </button>
+
+          <div id="approver-list" class="d-flex flex-column gap-2">
+            <!-- 결재선 아이템이 여기 추가됨 -->
+          </div>
+          <div id="approver-empty" class="text-center text-muted py-3 small">
+            <i class="bi bi-person-x d-block mb-1"></i>결재자를 추가하세요
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+<script>
+  const approvers = [];
+
+  function addApprover() {
+    const sel = document.getElementById('approverSelect');
+    const id = sel.value;
+    const name = sel.options[sel.selectedIndex].text;
+    if (!id) return;
+    if (approvers.find(a => a.id === id)) {
+      alert('이미 추가된 결재자입니다.');
+      return;
+    }
+    approvers.push({ id, name });
+    renderApprovers();
+  }
+
+  function removeApprover(id) {
+    const idx = approvers.findIndex(a => a.id === id);
+    if (idx > -1) approvers.splice(idx, 1);
+    renderApprovers();
+  }
+
+  function renderApprovers() {
+    const list = document.getElementById('approver-list');
+    const empty = document.getElementById('approver-empty');
+    const inputs = document.getElementById('approver-inputs');
+
+    list.innerHTML = '';
+    inputs.innerHTML = '';
+
+    if (approvers.length === 0) {
+      empty.style.display = '';
+      return;
+    }
+    empty.style.display = 'none';
+
+    approvers.forEach((a, i) => {
+      list.innerHTML += `
+        <div class="d-flex align-items-center justify-content-between p-2 rounded border">
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-primary rounded-pill">${i + 1}</span>
+            <span class="small fw-semibold">${a.name}</span>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline-danger py-0 px-1"
+                  onclick="removeApprover('${a.id}')">
+            <i class="bi bi-x"></i>
+          </button>
+        </div>`;
+      inputs.innerHTML += `<input type="hidden" name="approverIds" value="${a.id}"/>`;
+    });
+  }
+</script>
+</body>
+</html>

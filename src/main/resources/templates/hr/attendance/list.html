@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('근태 관리')}"></head>
+<body>
+<div th:replace="~{fragments/layout :: sidebar(${menus}, '/hr/attendance')}"></div>
+<div th:replace="~{fragments/layout :: topbar('근태 관리', ${currentUser})}"></div>
+<main id="main">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="page-title mb-0"><i class="bi bi-clock me-2 text-primary"></i>근태 관리</div>
+    <div class="d-flex gap-2">
+      <form th:action="@{/hr/attendance/check-in}" method="post">
+        <button type="submit" class="btn btn-outline-success"><i class="bi bi-box-arrow-in-right me-1"></i>출근</button>
+      </form>
+      <form th:action="@{/hr/attendance/check-out}" method="post">
+        <button type="submit" class="btn btn-outline-danger"><i class="bi bi-box-arrow-right me-1"></i>퇴근</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 필터 -->
+  <div class="card mb-3">
+    <div class="card-body py-3 px-4">
+      <form th:action="@{/hr/attendance}" method="get" class="d-flex gap-2 flex-wrap align-items-center">
+        <select name="employeeId" class="form-select" style="max-width:200px;">
+          <option value="">직원 선택</option>
+          <option th:each="emp : ${employees}" th:value="${emp.id}" th:text="${emp.name}"
+                  th:selected="${emp.id == selectedEmployeeId}">직원</option>
+        </select>
+        <input type="month" name="month" class="form-control" th:value="${month}" style="max-width:160px;"/>
+        <button type="submit" class="btn btn-primary">조회</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th class="px-4">날짜</th>
+              <th>출근</th>
+              <th>퇴근</th>
+              <th>상태</th>
+              <th>비고</th>
+              <th class="text-center">관리</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="att : ${attendances}">
+              <td class="px-4 fw-semibold" th:text="${att.workDate}">-</td>
+              <td class="small" th:text="${att.checkIn != null ? #temporals.format(att.checkIn,'HH:mm') : '-'}">-</td>
+              <td class="small" th:text="${att.checkOut != null ? #temporals.format(att.checkOut,'HH:mm') : '-'}">-</td>
+              <td>
+                <span th:switch="${att.status}">
+                  <span th:case="'NORMAL'"      class="badge bg-success">정상</span>
+                  <span th:case="'LATE'"        class="badge bg-warning text-dark">지각</span>
+                  <span th:case="'EARLY_LEAVE'" class="badge bg-info">조기퇴근</span>
+                  <span th:case="'ABSENT'"      class="badge bg-danger">결근</span>
+                  <span th:case="*"             class="badge bg-secondary" th:text="${att.status}">-</span>
+                </span>
+              </td>
+              <td class="small text-muted" th:text="${att.note}">-</td>
+              <td class="text-center">
+                <form th:action="@{/hr/attendance/{id}/delete(id=${att.id})}" method="post" class="d-inline"
+                      onsubmit="return confirm('삭제하시겠습니까?')">
+                  <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                </form>
+              </td>
+            </tr>
+            <tr th:if="${attendances == null or attendances.isEmpty()}">
+              <td colspan="6" class="text-center text-muted py-5">
+                <i class="bi bi-clock fs-2 d-block mb-2"></i>근태 기록이 없습니다.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

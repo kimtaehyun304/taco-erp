@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('결재함')}"></head>
+<body>
+<div th:replace="~{fragments/layout :: sidebar(${menus}, '/approval/inbox')}"></div>
+<div th:replace="~{fragments/layout :: topbar('결재함', ${currentUser})}"></div>
+<main id="main">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="page-title mb-0"><i class="bi bi-inbox me-2 text-primary"></i>결재함</div>
+  </div>
+
+  <div class="card">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th class="px-4">번호</th>
+              <th>유형</th>
+              <th>제목</th>
+              <th>상태</th>
+              <th>기안일</th>
+              <th class="text-center">결재</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="doc : ${documents}">
+              <td class="px-4 text-muted small" th:text="${doc.id}">-</td>
+              <td>
+                <span th:switch="${doc.documentType}">
+                  <span th:case="'GENERAL'"  class="badge bg-secondary">일반기안</span>
+                  <span th:case="'LEAVE'"    class="badge bg-info">휴가신청</span>
+                  <span th:case="'EXPENSE'"  class="badge bg-warning text-dark">경비지출</span>
+                  <span th:case="'PURCHASE'" class="badge bg-primary">구매요청</span>
+                  <span th:case="'REPORT'"   class="badge bg-dark">보고서</span>
+                  <span th:case="*"          class="badge bg-light text-dark" th:text="${doc.documentType}">-</span>
+                </span>
+              </td>
+              <td>
+                <a th:href="@{/approval/{id}(id=${doc.id})}"
+                   class="text-decoration-none fw-semibold" th:text="${doc.title}">제목</a>
+                <span class="badge bg-danger ms-1 small">결재 대기</span>
+              </td>
+              <td>
+                <span th:switch="${doc.status}">
+                  <span th:case="'IN_PROGRESS'" class="badge bg-primary">결재중</span>
+                  <span th:case="'APPROVED'"    class="badge bg-success">승인완료</span>
+                  <span th:case="'REJECTED'"    class="badge bg-danger">반려</span>
+                </span>
+              </td>
+              <td class="small text-muted"
+                  th:text="${doc.createdAt != null ? #temporals.format(doc.createdAt,'yyyy-MM-dd HH:mm') : '-'}">-</td>
+              <td class="text-center">
+                <a th:href="@{/approval/{id}(id=${doc.id})}" class="btn btn-sm btn-primary">
+                  <i class="bi bi-check2-square me-1"></i>결재
+                </a>
+              </td>
+            </tr>
+            <tr th:if="${documents == null or documents.isEmpty()}">
+              <td colspan="6" class="text-center text-muted py-5">
+                <i class="bi bi-inbox fs-2 d-block mb-2"></i>결재 대기 문서가 없습니다.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

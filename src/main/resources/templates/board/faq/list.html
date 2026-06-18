@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('FAQ')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: sidebar(${menus}, '/board/faq')}"></div>
+<div th:replace="~{fragments/layout :: topbar('FAQ', ${currentUser})}"></div>
+
+<main id="main">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="page-title mb-0"><i class="bi bi-question-circle me-2 text-primary"></i>FAQ</div>
+    <a th:href="@{/board/faq/new}" class="btn btn-primary">
+      <i class="bi bi-pencil-square me-1"></i> 글쓰기
+    </a>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body py-3 px-4">
+      <form th:action="@{/board/faq}" method="get" class="d-flex gap-2">
+        <div class="input-group" style="max-width:360px;">
+          <span class="input-group-text"><i class="bi bi-search text-muted"></i></span>
+          <input type="text" name="keyword" class="form-control" th:value="${keyword}" placeholder="제목 검색"/>
+        </div>
+        <button type="submit" class="btn btn-primary">검색</button>
+        <a th:href="@{/board/faq}" class="btn btn-outline-secondary">초기화</a>
+      </form>
+    </div>
+  </div>
+
+  <!-- FAQ 아코디언 -->
+  <div class="accordion" id="faqAccordion">
+    <th:block th:each="b, stat : ${boards}">
+      <div class="accordion-item border-0 mb-2 rounded shadow-sm">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed rounded fw-semibold"
+                  type="button" data-bs-toggle="collapse"
+                  th:data-bs-target="'#faq-' + ${b.id}">
+            <i class="bi bi-question-circle-fill text-primary me-2"></i>
+            <span th:text="${b.title}">질문</span>
+          </button>
+        </h2>
+        <div th:id="'faq-' + ${b.id}" class="accordion-collapse collapse"
+             data-bs-parent="#faqAccordion">
+          <div class="accordion-body text-muted" style="white-space:pre-wrap; line-height:1.8;"
+               th:text="${b.content}">답변</div>
+          <div class="accordion-body pt-0 d-flex gap-2">
+            <a th:href="@{/board/faq/{id}/edit(id=${b.id})}" class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-pencil me-1"></i>수정
+            </a>
+            <form th:action="@{/board/faq/{id}/delete(id=${b.id})}" method="post"
+                  onsubmit="return confirm('삭제하시겠습니까?')">
+              <button type="submit" class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-trash me-1"></i>삭제
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </th:block>
+    <div th:if="${boards == null or boards.isEmpty()}" class="card">
+      <div class="card-body text-center text-muted py-5">
+        <i class="bi bi-question-circle fs-2 d-block mb-2"></i>등록된 FAQ가 없습니다.
+      </div>
+    </div>
+  </div>
+</main>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

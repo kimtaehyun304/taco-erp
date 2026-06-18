@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('부서 관리')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: sidebar(${menus}, '/admin/departments')}"></div>
+<div th:replace="~{fragments/layout :: topbar('부서 관리', ${currentUser})}"></div>
+
+<main id="main">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="page-title mb-0"><i class="bi bi-diagram-3 me-2 text-primary"></i>부서 관리</div>
+    <a th:href="@{/admin/departments/new}" class="btn btn-primary">
+      <i class="bi bi-plus-lg me-1"></i> 부서 추가
+    </a>
+  </div>
+
+  <div class="row g-3">
+    <!-- 조직도 트리 -->
+    <div class="col-lg-5">
+      <div class="card h-100">
+        <div class="card-header py-3 px-4">
+          <span class="fw-semibold"><i class="bi bi-diagram-3 me-2 text-muted"></i>조직도</span>
+        </div>
+        <div class="card-body">
+          <ul class="list-unstyled mb-0" id="org-tree">
+            <th:block th:each="dept : ${departments}" th:if="${dept.parentId == null}">
+              <li class="mb-1">
+                <div class="d-flex align-items-center gap-2 p-2 rounded" style="background:#f8f9fa;">
+                  <i class="bi bi-building text-primary"></i>
+                  <span class="fw-semibold" th:text="${dept.name}">부서</span>
+                </div>
+                <ul class="list-unstyled ms-3 mt-1">
+                  <th:block th:each="child : ${departments}" th:if="${child.parentId == dept.id}">
+                    <li class="mb-1">
+                      <div class="d-flex align-items-center gap-2 p-2 rounded" style="background:#f0f4ff;">
+                        <i class="bi bi-diagram-2 text-info small"></i>
+                        <span th:text="${child.name}">하위부서</span>
+                      </div>
+                      <ul class="list-unstyled ms-3 mt-1">
+                        <th:block th:each="grand : ${departments}" th:if="${grand.parentId == child.id}">
+                          <li class="mb-1">
+                            <div class="d-flex align-items-center gap-2 p-2 rounded" style="background:#fafafa;">
+                              <i class="bi bi-people text-secondary small"></i>
+                              <span th:text="${grand.name}">팀</span>
+                            </div>
+                          </li>
+                        </th:block>
+                      </ul>
+                    </li>
+                  </th:block>
+                </ul>
+              </li>
+            </th:block>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- 부서 목록 테이블 -->
+    <div class="col-lg-7">
+      <div class="card">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead>
+                <tr>
+                  <th class="px-4">ID</th>
+                  <th>부서명</th>
+                  <th>상위 부서</th>
+                  <th>정렬순서</th>
+                  <th class="text-center">관리</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr th:each="dept : ${departments}">
+                  <td class="px-4 text-muted small" th:text="${dept.id}">-</td>
+                  <td class="fw-semibold" th:text="${dept.name}">-</td>
+                  <td>
+                    <span th:each="p : ${departments}" th:if="${p.id == dept.parentId}"
+                          th:text="${p.name}" class="text-muted small">-</span>
+                    <span th:if="${dept.parentId == null}" class="text-muted small">최상위</span>
+                  </td>
+                  <td class="text-muted small" th:text="${dept.sortOrder}">0</td>
+                  <td class="text-center">
+                    <a th:href="@{/admin/departments/{id}/edit(id=${dept.id})}" class="btn btn-sm btn-outline-primary me-1">
+                      <i class="bi bi-pencil"></i>
+                    </a>
+                    <form th:action="@{/admin/departments/{id}/delete(id=${dept.id})}" method="post" class="d-inline"
+                          onsubmit="return confirm('정말 삭제하시겠습니까?')">
+                      <button type="submit" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+                <tr th:if="${departments == null or departments.isEmpty()}">
+                  <td colspan="5" class="text-center text-muted py-4">등록된 부서가 없습니다.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

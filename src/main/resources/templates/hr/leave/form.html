@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('휴가 신청')}"></head>
+<body>
+<div th:replace="~{fragments/layout :: sidebar(${menus}, '/hr/leave')}"></div>
+<div th:replace="~{fragments/layout :: topbar('휴가 신청', ${currentUser})}"></div>
+<main id="main">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="page-title mb-0"><i class="bi bi-calendar3 me-2 text-primary"></i>휴가 신청</div>
+    <a th:href="@{/hr/leave}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>목록</a>
+  </div>
+
+  <div class="card" style="max-width:600px;">
+    <div class="card-body p-4">
+      <form th:action="@{/hr/leave}" method="post">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label fw-semibold">직원 <span class="text-danger">*</span></label>
+            <select name="employeeId" class="form-select" required>
+              <option value="">-- 직원 선택 --</option>
+              <option th:each="emp : ${employees}" th:value="${emp.id}" th:text="${emp.name}">직원</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">휴가 종류 <span class="text-danger">*</span></label>
+            <select name="leaveType" class="form-select" required>
+              <option value="ANNUAL">연차</option>
+              <option value="SICK">병가</option>
+              <option value="SPECIAL">특별휴가</option>
+              <option value="UNPAID">무급휴가</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">일수 <span class="text-danger">*</span></label>
+            <input type="number" name="days" class="form-control" step="0.5" min="0.5" required placeholder="1"/>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">시작일 <span class="text-danger">*</span></label>
+            <input type="date" name="startDate" class="form-control" required/>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">종료일 <span class="text-danger">*</span></label>
+            <input type="date" name="endDate" class="form-control" required/>
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-semibold">사유</label>
+            <textarea name="reason" class="form-control" rows="3" placeholder="휴가 사유를 입력하세요"></textarea>
+          </div>
+        </div>
+        <hr class="my-4"/>
+        <div class="d-flex gap-2 justify-content-end">
+          <a th:href="@{/hr/leave}" class="btn btn-outline-secondary">취소</a>
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check-lg me-1"></i>신청 완료
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

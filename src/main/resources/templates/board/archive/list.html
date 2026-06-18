@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('자료실')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: sidebar(${menus}, '/board/archive')}"></div>
+<div th:replace="~{fragments/layout :: topbar('자료실', ${currentUser})}"></div>
+
+<main id="main">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="page-title mb-0"><i class="bi bi-folder me-2 text-primary"></i>자료실</div>
+    <a th:href="@{/board/archive/new}" class="btn btn-primary">
+      <i class="bi bi-pencil-square me-1"></i> 글쓰기
+    </a>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body py-3 px-4">
+      <form th:action="@{/board/archive}" method="get" class="d-flex gap-2">
+        <div class="input-group" style="max-width:360px;">
+          <span class="input-group-text"><i class="bi bi-search text-muted"></i></span>
+          <input type="text" name="keyword" class="form-control" th:value="${keyword}" placeholder="제목 검색"/>
+        </div>
+        <button type="submit" class="btn btn-primary">검색</button>
+        <a th:href="@{/board/archive}" class="btn btn-outline-secondary">초기화</a>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th class="px-4" style="width:80px;">번호</th>
+              <th>제목</th>
+              <th style="width:120px;">작성자</th>
+              <th style="width:120px;">작성일</th>
+              <th style="width:80px;" class="text-center">조회</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="b : ${boards}">
+              <td class="px-4 text-muted small" th:text="${b.id}">-</td>
+              <td>
+                <i class="bi bi-file-earmark-text text-secondary me-1"></i>
+                <a th:href="@{/board/archive/{id}(id=${b.id})}" class="text-decoration-none text-dark fw-semibold"
+                   th:text="${b.title}">제목</a>
+              </td>
+              <td class="small text-muted" th:text="${b.authorId}">-</td>
+              <td class="small text-muted"
+                  th:text="${b.createdAt != null ? #temporals.format(b.createdAt,'yyyy-MM-dd') : '-'}">-</td>
+              <td class="text-center small text-muted" th:text="${b.viewCount}">0</td>
+            </tr>
+            <tr th:if="${boards == null or boards.isEmpty()}">
+              <td colspan="5" class="text-center text-muted py-5">
+                <i class="bi bi-folder2-open fs-2 d-block mb-2"></i>등록된 자료가 없습니다.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

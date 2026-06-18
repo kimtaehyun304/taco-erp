@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('FAQ 상세')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: sidebar(${menus}, '/board/faq')}"></div>
+<div th:replace="~{fragments/layout :: topbar('FAQ', ${currentUser})}"></div>
+
+<main id="main">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="page-title mb-0"><i class="bi bi-question-circle me-2 text-primary"></i>FAQ</div>
+    <a th:href="@{/board/faq}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left me-1"></i> 목록
+    </a>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-header px-4 py-3 d-flex align-items-center justify-content-between">
+      <span class="fw-bold fs-5">
+        <i class="bi bi-question-circle-fill text-primary me-2"></i>
+        <span th:text="${board.title}">질문</span>
+      </span>
+      <div class="d-flex gap-2">
+        <a th:href="@{/board/faq/{id}/edit(id=${board.id})}" class="btn btn-sm btn-outline-primary">
+          <i class="bi bi-pencil"></i> 수정
+        </a>
+        <form th:action="@{/board/faq/{id}/delete(id=${board.id})}" method="post" class="d-inline"
+              onsubmit="return confirm('정말 삭제하시겠습니까?')">
+          <button type="submit" class="btn btn-sm btn-outline-danger">
+            <i class="bi bi-trash"></i> 삭제
+          </button>
+        </form>
+      </div>
+    </div>
+    <div class="card-body px-4 py-4">
+      <div style="min-height:120px; white-space:pre-wrap; line-height:1.8;" th:text="${board.content}">답변</div>
+    </div>
+  </div>
+</main>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="head(title)">
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title th:text="${title} + ' | Taco ERP'">Taco ERP</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+  <style>
+    :root {
+      --sidebar-width: 260px;
+      --sidebar-bg: #1e2a38;
+      --sidebar-hover: #2d3f52;
+      --sidebar-active: #0d6efd;
+      --topbar-height: 56px;
+    }
+    body { background: #f0f2f5; font-family: 'Pretendard', 'Noto Sans KR', sans-serif; }
+    /* Sidebar */
+    #sidebar {
+      position: fixed; top: 0; left: 0;
+      width: var(--sidebar-width); height: 100vh;
+      background: var(--sidebar-bg); overflow-y: auto;
+      z-index: 1000; transition: width .25s;
+    }
+    #sidebar .brand {
+      height: var(--topbar-height); display: flex; align-items: center;
+      padding: 0 1.25rem; border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    #sidebar .brand span { color: #fff; font-weight: 700; font-size: 1.1rem; }
+    #sidebar .nav-section {
+      padding: .5rem 1rem .25rem; font-size: .7rem; font-weight: 600;
+      color: rgba(255,255,255,.35); text-transform: uppercase; letter-spacing: .08em;
+    }
+    #sidebar .nav-link {
+      color: rgba(255,255,255,.7); border-radius: 8px; margin: 1px 8px;
+      padding: .55rem .85rem; font-size: .875rem; display: flex; align-items: center; gap: .6rem;
+    }
+    #sidebar .nav-link:hover { background: var(--sidebar-hover); color: #fff; }
+    #sidebar .nav-link.active { background: var(--sidebar-active); color: #fff; }
+    #sidebar .nav-link i { font-size: 1rem; width: 1.2rem; text-align: center; }
+    #sidebar .sub-menu { padding-left: 2.5rem; }
+    /* Topbar */
+    #topbar {
+      position: fixed; top: 0; left: var(--sidebar-width); right: 0;
+      height: var(--topbar-height); background: #fff;
+      box-shadow: 0 1px 3px rgba(0,0,0,.08); z-index: 999;
+      display: flex; align-items: center; padding: 0 1.5rem; gap: 1rem;
+    }
+    #topbar .breadcrumb { margin: 0; font-size: .85rem; }
+    #topbar .user-info { margin-left: auto; display: flex; align-items: center; gap: .75rem; }
+    /* Main */
+    #main {
+      margin-left: var(--sidebar-width);
+      padding-top: calc(var(--topbar-height) + 1.5rem);
+      min-height: 100vh; padding-left: 1.5rem; padding-right: 1.5rem; padding-bottom: 2rem;
+    }
+    .page-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 1.25rem; color: #1e2a38; }
+    .card { border: none; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.07); }
+    .card-header { background: #fff; border-bottom: 1px solid #f0f0f0; border-radius: 12px 12px 0 0 !important; }
+    .btn-primary { background: #0d6efd; border-color: #0d6efd; }
+    .table th { font-size: .8rem; font-weight: 600; text-transform: uppercase;
+                color: #6c757d; border-top: none; background: #f8f9fa; }
+    .badge-role { font-size: .7rem; }
+    .collapse-toggle { cursor: pointer; }
+    .sub-item { padding: .4rem .85rem .4rem 3rem !important; font-size: .82rem !important; }
+  </style>
+</head>
+
+<div th:fragment="sidebar(menus, activePath)">
+  <nav id="sidebar">
+    <div class="brand">
+      <i class="bi bi-grid-3x3-gap-fill text-primary me-2 fs-5"></i>
+      <span>Taco ERP</span>
+    </div>
+    <ul class="nav flex-column mt-2 pb-3">
+      <!-- 대시보드 -->
+      <li class="nav-item">
+        <a class="nav-link" th:classappend="${activePath == '/dashboard'} ? 'active'" th:href="@{/dashboard}">
+          <i class="bi bi-speedometer2"></i> 대시보드
+        </a>
+      </li>
+      <!-- 동적 메뉴 -->
+      <th:block th:each="menu : ${menus}" th:if="${menu.parentId == null}">
+        <li class="nav-item" th:if="${menu.url != null and !menu.url.isEmpty()}">
+          <a class="nav-link" th:classappend="${#strings.startsWith(activePath, menu.url)} ? 'active'"
+             th:href="${menu.url}">
+            <i class="bi" th:classappend="${menu.icon}"></i>
+            <span th:text="${menu.name}">메뉴</span>
+          </a>
+        </li>
+        <li class="nav-item" th:if="${menu.url == null or menu.url.isEmpty()}">
+          <a class="nav-link collapse-toggle" data-bs-toggle="collapse"
+             th:href="'#menu-' + ${menu.id}" aria-expanded="false">
+            <i class="bi" th:classappend="${menu.icon}"></i>
+            <span th:text="${menu.name}">그룹</span>
+            <i class="bi bi-chevron-down ms-auto small"></i>
+          </a>
+          <div class="collapse" th:id="'menu-' + ${menu.id}">
+            <ul class="nav flex-column sub-menu">
+              <th:block th:each="sub : ${menus}" th:if="${sub.parentId == menu.id}">
+                <li class="nav-item">
+                  <a class="nav-link sub-item"
+                     th:classappend="${#strings.startsWith(activePath, sub.url)} ? 'active'"
+                     th:href="${sub.url}">
+                    <i class="bi" th:classappend="${sub.icon}"></i>
+                    <span th:text="${sub.name}">서브메뉴</span>
+                  </a>
+                </li>
+              </th:block>
+            </ul>
+          </div>
+        </li>
+      </th:block>
+    </ul>
+  </nav>
+</div>
+
+<div th:fragment="topbar(title, currentUser)">
+  <div id="topbar">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a th:href="@{/dashboard}" class="text-decoration-none">홈</a></li>
+        <li class="breadcrumb-item active" th:text="${title}">현재 페이지</li>
+      </ol>
+    </nav>
+    <div class="user-info">
+      <span class="text-muted small" th:text="${currentUser?.name} + ' 님'">사용자</span>
+      <div class="dropdown">
+        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+          <i class="bi bi-person-circle"></i>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li><span class="dropdown-item-text small text-muted" th:text="${currentUser?.username}">username</span></li>
+          <li><hr class="dropdown-divider"/></li>
+          <li>
+            <form th:action="@{/logout}" method="post">
+              <button type="submit" class="dropdown-item text-danger">
+                <i class="bi bi-box-arrow-right me-1"></i> 로그아웃
+              </button>
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div th:fragment="scripts">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // 현재 경로에 맞는 sidebar 메뉴 자동 열기
+    document.addEventListener('DOMContentLoaded', function () {
+      const path = window.location.pathname;
+      document.querySelectorAll('.sub-item').forEach(link => {
+        if (link.getAttribute('href') && path.startsWith(link.getAttribute('href'))) {
+          const collapse = link.closest('.collapse');
+          if (collapse) {
+            new bootstrap.Collapse(collapse, { show: true });
+          }
+        }
+      });
+    });
+  </script>
+</div>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('급여 등록/수정')}"></head>
+<body>
+<div th:replace="~{fragments/layout :: sidebar(${menus}, '/hr/salary')}"></div>
+<div th:replace="~{fragments/layout :: topbar('급여 등록/수정', ${currentUser})}"></div>
+<main id="main">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="page-title mb-0">
+      <i class="bi bi-cash-stack me-2 text-primary"></i>
+      <span th:text="${salary.id != null} ? '급여 수정' : '급여 등록'">급여 등록</span>
+    </div>
+    <a th:href="@{/hr/salary}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>목록</a>
+  </div>
+
+  <div class="card" style="max-width:560px;">
+    <div class="card-body p-4">
+      <form th:action="${salary.id != null} ? @{/hr/salary/{id}(id=${salary.id})} : @{/hr/salary}"
+            method="post">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label fw-semibold">직원 <span class="text-danger">*</span></label>
+            <select name="employeeId" class="form-select" required>
+              <option value="">-- 직원 선택 --</option>
+              <option th:each="emp : ${employees}" th:value="${emp.id}" th:text="${emp.name}"
+                      th:selected="${emp.id == salary.employeeId}">직원</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">지급월 <span class="text-danger">*</span></label>
+            <input type="month" name="payMonth" class="form-control"
+                   th:value="${salary.payMonth}" required/>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">지급일</label>
+            <input type="datetime-local" name="paidAt" class="form-control"
+                   th:value="${salary.paidAt != null ? #temporals.format(salary.paidAt,'yyyy-MM-dd''T''HH:mm') : ''}"/>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">기본급 <span class="text-danger">*</span></label>
+            <input type="number" name="baseSalary" class="form-control"
+                   th:value="${salary.baseSalary}" required min="0" step="1000" placeholder="3000000"/>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">보너스</label>
+            <input type="number" name="bonus" class="form-control"
+                   th:value="${salary.bonus}" min="0" step="1000" placeholder="0"/>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">공제액</label>
+            <input type="number" name="deduction" class="form-control"
+                   th:value="${salary.deduction}" min="0" step="1000" placeholder="0"/>
+          </div>
+          <div class="col-12">
+            <div class="alert alert-info py-2 small mb-0">
+              <i class="bi bi-info-circle me-1"></i>
+              실지급액 = 기본급 + 보너스 - 공제액 (저장 시 자동 계산)
+            </div>
+          </div>
+        </div>
+        <hr class="my-4"/>
+        <div class="d-flex gap-2 justify-content-end">
+          <a th:href="@{/hr/salary}" class="btn btn-outline-secondary">취소</a>
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check-lg me-1"></i>
+            <span th:text="${salary.id != null} ? '수정 완료' : '등록 완료'">저장</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('사용자 관리')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: sidebar(${menus}, '/admin/users')}"></div>
+<div th:replace="~{fragments/layout :: topbar('사용자 관리', ${currentUser})}"></div>
+
+<main id="main">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="page-title mb-0"><i class="bi bi-people me-2 text-primary"></i>사용자 관리</div>
+    <a th:href="@{/admin/users/new}" class="btn btn-primary">
+      <i class="bi bi-person-plus me-1"></i> 사용자 추가
+    </a>
+  </div>
+
+  <div class="card">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th class="px-4">ID</th>
+              <th>아이디</th>
+              <th>이름</th>
+              <th>이메일</th>
+              <th>부서</th>
+              <th>직급</th>
+              <th>상태</th>
+              <th>가입일</th>
+              <th class="text-center">관리</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="user : ${users}">
+              <td class="px-4 text-muted small" th:text="${user.id}">-</td>
+              <td class="fw-semibold" th:text="${user.username}">-</td>
+              <td th:text="${user.name}">-</td>
+              <td class="text-muted small" th:text="${user.email}">-</td>
+              <td>
+                <span th:each="dept : ${departments}" th:if="${dept.id == user.departmentId}"
+                      th:text="${dept.name}" class="small">-</span>
+              </td>
+              <td>
+                <span th:each="pos : ${positions}" th:if="${pos.id == user.positionId}"
+                      th:text="${pos.name}" class="small badge bg-light text-dark">-</span>
+              </td>
+              <td>
+                <span th:if="${user.enabled}" class="badge bg-success">활성</span>
+                <span th:unless="${user.enabled}" class="badge bg-secondary">비활성</span>
+              </td>
+              <td class="text-muted small" th:text="${user.createdAt != null ? #temporals.format(user.createdAt,'yyyy-MM-dd') : '-'}">-</td>
+              <td class="text-center">
+                <a th:href="@{/admin/users/{id}/edit(id=${user.id})}" class="btn btn-sm btn-outline-primary me-1">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                <form th:action="@{/admin/users/{id}/delete(id=${user.id})}" method="post" class="d-inline"
+                      onsubmit="return confirm('정말 삭제하시겠습니까?')">
+                  <button type="submit" class="btn btn-sm btn-outline-danger">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+            <tr th:if="${users == null or users.isEmpty()}">
+              <td colspan="9" class="text-center text-muted py-4">등록된 사용자가 없습니다.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

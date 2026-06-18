@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('직원 등록/수정')}"></head>
+<body>
+<div th:replace="~{fragments/layout :: sidebar(${menus}, '/hr/employees')}"></div>
+<div th:replace="~{fragments/layout :: topbar('직원 등록/수정', ${currentUser})}"></div>
+<main id="main">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="page-title mb-0">
+      <i class="bi bi-person-lines-fill me-2 text-primary"></i>
+      <span th:text="${employee.id != null} ? '직원 수정' : '직원 등록'">직원 등록</span>
+    </div>
+    <a th:href="@{/hr/employees}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>목록</a>
+  </div>
+
+  <div class="card" style="max-width:720px;">
+    <div class="card-body p-4">
+      <form th:action="${employee.id != null} ? @{/hr/employees/{id}(id=${employee.id})} : @{/hr/employees}"
+            method="post">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">사번 <span class="text-danger">*</span></label>
+            <input type="text" name="employeeNo" class="form-control font-monospace"
+                   th:value="${employee.employeeNo}" required placeholder="EMP001"/>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">이름 <span class="text-danger">*</span></label>
+            <input type="text" name="name" class="form-control" th:value="${employee.name}" required/>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">생년월일</label>
+            <input type="date" name="birthDate" class="form-control" th:value="${employee.birthDate}"/>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">성별</label>
+            <select name="gender" class="form-select">
+              <option value="">선택</option>
+              <option value="M" th:selected="${employee.gender == 'M'}">남성</option>
+              <option value="F" th:selected="${employee.gender == 'F'}">여성</option>
+            </select>
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-semibold">주소</label>
+            <input type="text" name="address" class="form-control" th:value="${employee.address}"/>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">부서</label>
+            <select name="departmentId" class="form-select">
+              <option value="">-- 선택 --</option>
+              <option th:each="d : ${departments}" th:value="${d.id}" th:text="${d.name}"
+                      th:selected="${d.id == employee.departmentId}">부서</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">직급</label>
+            <select name="positionId" class="form-select">
+              <option value="">-- 선택 --</option>
+              <option th:each="p : ${positions}" th:value="${p.id}" th:text="${p.name}"
+                      th:selected="${p.id == employee.positionId}">직급</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">입사일</label>
+            <input type="date" name="hireDate" class="form-control" th:value="${employee.hireDate}"/>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">퇴사일</label>
+            <input type="date" name="resignDate" class="form-control" th:value="${employee.resignDate}"/>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">상태</label>
+            <select name="status" class="form-select">
+              <option value="ACTIVE"   th:selected="${employee.status == 'ACTIVE'   or employee.status == null}">재직</option>
+              <option value="LEAVE"    th:selected="${employee.status == 'LEAVE'}">휴직</option>
+              <option value="RESIGNED" th:selected="${employee.status == 'RESIGNED'}">퇴직</option>
+            </select>
+          </div>
+        </div>
+        <hr class="my-4"/>
+        <div class="d-flex gap-2 justify-content-end">
+          <a th:href="@{/hr/employees}" class="btn btn-outline-secondary">취소</a>
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check-lg me-1"></i>
+            <span th:text="${employee.id != null} ? '수정 완료' : '등록 완료'">저장</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

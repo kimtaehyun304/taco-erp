@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('공지사항 상세')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: sidebar(${menus}, '/board/notice')}"></div>
+<div th:replace="~{fragments/layout :: topbar('공지사항', ${currentUser})}"></div>
+
+<main id="main">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="page-title mb-0"><i class="bi bi-megaphone me-2 text-primary"></i>공지사항</div>
+    <a th:href="@{/board/notice}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left me-1"></i> 목록
+    </a>
+  </div>
+
+  <div class="card">
+    <div class="card-header px-4 py-3">
+      <div class="d-flex align-items-start justify-content-between">
+        <div>
+          <span th:if="${board.pinned}" class="badge bg-danger me-2">공지</span>
+          <span class="fw-bold fs-5" th:text="${board.title}">제목</span>
+        </div>
+        <div class="d-flex gap-2">
+          <a th:href="@{/board/notice/{id}/edit(id=${board.id})}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-pencil"></i> 수정
+          </a>
+          <form th:action="@{/board/notice/{id}/delete(id=${board.id})}" method="post" class="d-inline"
+                onsubmit="return confirm('정말 삭제하시겠습니까?')">
+            <button type="submit" class="btn btn-sm btn-outline-danger">
+              <i class="bi bi-trash"></i> 삭제
+            </button>
+          </form>
+        </div>
+      </div>
+      <div class="text-muted small mt-2">
+        <i class="bi bi-clock me-1"></i>
+        <span th:text="${board.createdAt != null ? #temporals.format(board.createdAt,'yyyy-MM-dd HH:mm') : '-'}">-</span>
+        <span class="ms-3"><i class="bi bi-eye me-1"></i><span th:text="${board.viewCount}">0</span></span>
+      </div>
+    </div>
+    <div class="card-body px-4 py-4">
+      <div style="min-height:200px; white-space:pre-wrap; line-height:1.8;" th:text="${board.content}">내용</div>
+    </div>
+  </div>
+</main>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>
