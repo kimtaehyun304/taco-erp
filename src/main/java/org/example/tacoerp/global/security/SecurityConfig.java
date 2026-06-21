@@ -13,7 +13,6 @@ import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
-import org.springframework.security.web.server.authentication.RedirectServerAuthenticationSuccessHandler;
 import org.springframework.security.web.server.authentication.logout.RedirectServerLogoutSuccessHandler;
 
 import java.net.URI;
@@ -25,6 +24,9 @@ import java.net.URI;
 public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
+    private final AuditingAuthenticationSuccessHandler auditingAuthenticationSuccessHandler;
+    private final AuditingAuthenticationFailureHandler auditingAuthenticationFailureHandler;
+    private final AuditingAccessDeniedHandler auditingAccessDeniedHandler;
 
     @Bean
     ApplicationRunner test(PasswordEncoder encoder) {
@@ -70,14 +72,30 @@ public class SecurityConfig {
                         .pathMatchers("/admin/positions/**").hasRole("ADMIN")
                         .pathMatchers("/admin/menus/**").hasRole("ADMIN")
                         .pathMatchers("/admin/audit-logs/**").hasRole("ADMIN")
+                        // 휴가 신청/조회/취소는 일반 사용자도 가능
+                        .pathMatchers(HttpMethod.GET, "/hr/leave", "/hr/leave/new").authenticated()
+                        .pathMatchers(HttpMethod.POST, "/hr/leave").authenticated()
+                        .pathMatchers(HttpMethod.POST, "/hr/leave/*/delete").authenticated()
+                        // 휴가 승인/반려는 관리자(HR)만 가능
+                        .pathMatchers(HttpMethod.POST, "/hr/leave/*/approve", "/hr/leave/*/reject").hasAnyRole("ADMIN", "HR")
+                        // 나머지 HR 변경(직원/근태/급여 관리 등)은 관리자(HR) 전용
                         .pathMatchers(HttpMethod.POST, "/hr/**").hasAnyRole("ADMIN", "HR")
                         .pathMatchers(HttpMethod.PUT, "/hr/**").hasAnyRole("ADMIN", "HR")
                         .pathMatchers(HttpMethod.DELETE, "/hr/**").hasAnyRole("ADMIN", "HR")
+                        // 공지사항 작성/수정/삭제는 팀장 이상(MANAGER/HR/ADMIN)만 가능
+                        .pathMatchers(HttpMethod.GET, "/board/notice/new", "/board/notice/*/edit").hasAnyRole("ADMIN", "HR", "MANAGER")
+                        .pathMatchers(HttpMethod.POST, "/board/notice").hasAnyRole("ADMIN", "HR", "MANAGER")
+                        .pathMatchers(HttpMethod.POST, "/board/notice/*").hasAnyRole("ADMIN", "HR", "MANAGER")
+                        .pathMatchers(HttpMethod.POST, "/board/notice/*/delete").hasAnyRole("ADMIN", "HR", "MANAGER")
                         .anyExchange().authenticated()
+                )
+                .exceptionHandling(exceptionHandling -> exceptionHandling
+                        .accessDeniedHandler(auditingAccessDeniedHandler)
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
-                        .authenticationSuccessHandler(new RedirectServerAuthenticationSuccessHandler("/dashboard"))
+                        .authenticationSuccessHandler(auditingAuthenticationSuccessHandler)
+                        .authenticationFailureHandler(auditingAuthenticationFailureHandler)
                         .authenticationManager(authenticationManager())
                 )
                 .logout(logout -> logout

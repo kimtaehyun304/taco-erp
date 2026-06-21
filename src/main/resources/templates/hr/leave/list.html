@@ -6,11 +6,14 @@
 <div th:replace="~{fragments/layout :: topbar('연차/휴가', ${currentUser})}"></div>
 <main id="main">
   <div class="d-flex align-items-center justify-content-between mb-3">
-    <div class="page-title mb-0"><i class="bi bi-calendar3 me-2 text-primary"></i>연차/휴가 관리</div>
+    <div class="page-title mb-0">
+      <i class="bi bi-calendar3 me-2 text-primary"></i>
+      <span th:text="${isManager} ? '연차/휴가 관리' : '내 휴가 신청 내역'">연차/휴가 관리</span>
+    </div>
     <a th:href="@{/hr/leave/new}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>휴가 신청</a>
   </div>
 
-  <div class="card mb-3">
+  <div class="card mb-3" th:if="${isManager}">
     <div class="card-body py-3 px-4">
       <form th:action="@{/hr/leave}" method="get" class="d-flex gap-2">
         <select name="status" class="form-select" style="max-width:160px;">
@@ -71,21 +74,22 @@
               <td class="small text-muted"
                   th:text="${req.createdAt != null ? #temporals.format(req.createdAt,'yyyy-MM-dd') : '-'}">-</td>
               <td class="text-center">
-                <form th:if="${req.status == 'PENDING'}"
+                <form th:if="${isManager and req.status == 'PENDING'}"
                       th:action="@{/hr/leave/{id}/approve(id=${req.id})}" method="post" class="d-inline">
                   <button type="submit" class="btn btn-sm btn-success me-1" title="승인">
                     <i class="bi bi-check-lg"></i>
                   </button>
                 </form>
-                <form th:if="${req.status == 'PENDING'}"
+                <form th:if="${isManager and req.status == 'PENDING'}"
                       th:action="@{/hr/leave/{id}/reject(id=${req.id})}" method="post" class="d-inline">
                   <button type="submit" class="btn btn-sm btn-warning me-1" title="반려">
                     <i class="bi bi-x-lg"></i>
                   </button>
                 </form>
-                <form th:action="@{/hr/leave/{id}/delete(id=${req.id})}" method="post" class="d-inline"
+                <form th:if="${isManager or req.status == 'PENDING'}"
+                      th:action="@{/hr/leave/{id}/delete(id=${req.id})}" method="post" class="d-inline"
                       onsubmit="return confirm('삭제하시겠습니까?')">
-                  <button type="submit" class="btn btn-sm btn-outline-danger">
+                  <button type="submit" class="btn btn-sm btn-outline-danger" title="취소">
                     <i class="bi bi-trash"></i>
                   </button>
                 </form>

@@ -57,7 +57,7 @@ INSERT INTO menu_roles (menu_id, role_id) VALUES (4, 1);
 INSERT INTO menu_roles (menu_id, role_id) VALUES (5, 1);
 INSERT INTO menu_roles (menu_id, role_id) VALUES (6, 1);
 INSERT INTO menu_roles (menu_id, role_id) VALUES (7, 1); INSERT INTO menu_roles (menu_id, role_id) VALUES (7, 2);
-INSERT INTO menu_roles (menu_id, role_id) VALUES (7, 3);
+INSERT INTO menu_roles (menu_id, role_id) VALUES (7, 3); INSERT INTO menu_roles (menu_id, role_id) VALUES (7, 4);
 INSERT INTO menu_roles (menu_id, role_id) VALUES (8, 1); INSERT INTO menu_roles (menu_id, role_id) VALUES (8, 2);
 INSERT INTO menu_roles (menu_id, role_id) VALUES (9, 1); INSERT INTO menu_roles (menu_id, role_id) VALUES (9, 2);
 INSERT INTO menu_roles (menu_id, role_id) VALUES (9, 3); INSERT INTO menu_roles (menu_id, role_id) VALUES (9, 4);
@@ -81,7 +81,7 @@ INSERT INTO menu_roles (menu_id, role_id) VALUES (18, 3); INSERT INTO menu_roles
 INSERT INTO menu_roles (menu_id, role_id) VALUES (19, 1); INSERT INTO menu_roles (menu_id, role_id) VALUES (19, 2);
 INSERT INTO menu_roles (menu_id, role_id) VALUES (19, 3); INSERT INTO menu_roles (menu_id, role_id) VALUES (19, 4);
 
--- 기본 사용자 (비밀번호: admin123 -> BCrypt)
+-- 기본 사용자 (비밀번호: admin -> BCrypt)
 delete from users;
 INSERT INTO users (id, username, password, name, email, department_id, position_id)
 VALUES (1, 'admin', '$2a$10$pxcQ6zVCIGx8M/akyvypr.bPlYR4zdcXNaZBt90j39Ewb6nRQ3IJa', '시스템관리자', 'admin@taco-erp.com', 2, 7);
@@ -120,3 +120,19 @@ INSERT INTO boards (id, title, content, board_type, author_id, is_pinned)
 VALUES (3, '개발팀 컨벤션 가이드', '코드 컨벤션 가이드 첨부 파일을 확인해주세요.', 'ARCHIVE', 3, FALSE);
 INSERT INTO boards (id, title, content, board_type, author_id, is_pinned)
 VALUES (4, '연차 신청 방법', '전자결재 > 휴가 신청 메뉴를 통해 연차를 신청할 수 있습니다.', 'FAQ', 2, FALSE);
+
+-- =============================================
+-- ID를 명시적으로 지정해 INSERT한 테이블들은
+-- AUTO_INCREMENT 시퀀스가 갱신되지 않으므로,
+-- 다음 신규 INSERT 시 PK 충돌이 나지 않도록
+-- 시퀀스를 현재 데이터의 최대 ID 다음 값으로 재설정한다.
+-- (데이터 추가 시 이 값들도 함께 올려줘야 함)
+-- =============================================
+ALTER TABLE departments ALTER COLUMN id RESTART WITH 8;
+ALTER TABLE positions   ALTER COLUMN id RESTART WITH 8;
+ALTER TABLE roles       ALTER COLUMN id RESTART WITH 5;
+ALTER TABLE menus       ALTER COLUMN id RESTART WITH 20;
+ALTER TABLE users       ALTER COLUMN id RESTART WITH 4;
+ALTER TABLE employees   ALTER COLUMN id RESTART WITH 4;
+ALTER TABLE boards      ALTER COLUMN id RESTART WITH 5;
+

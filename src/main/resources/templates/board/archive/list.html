@@ -48,7 +48,7 @@
                 <a th:href="@{/board/archive/{id}(id=${b.id})}" class="text-decoration-none text-dark fw-semibold"
                    th:text="${b.title}">제목</a>
               </td>
-              <td class="small text-muted" th:text="${b.authorId}">-</td>
+              <td class="small text-muted" th:text="${authorNames.get(b.authorId)} ?: '알 수 없음'">-</td>
               <td class="small text-muted"
                   th:text="${b.createdAt != null ? #temporals.format(b.createdAt,'yyyy-MM-dd') : '-'}">-</td>
               <td class="text-center small text-muted" th:text="${b.viewCount}">0</td>

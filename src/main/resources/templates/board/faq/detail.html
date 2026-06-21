@@ -34,6 +34,10 @@
     </div>
     <div class="card-body px-4 py-4">
       <div style="min-height:120px; white-space:pre-wrap; line-height:1.8;" th:text="${board.content}">답변</div>
+      <div class="text-muted small mt-3 pt-3 border-top">
+        <i class="bi bi-person me-1"></i>
+        <span th:text="${authorName}">작성자</span>
+      </div>
     </div>
   </div>
 </main>

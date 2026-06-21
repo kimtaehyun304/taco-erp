@@ -4,12 +4,14 @@ import lombok.RequiredArgsConstructor;
 import org.example.tacoerp.domain.hr.entity.Salary;
 import org.example.tacoerp.domain.hr.service.EmployeeService;
 import org.example.tacoerp.domain.hr.service.SalaryService;
+import org.example.tacoerp.domain.user.service.AuditLogService;
 import org.example.tacoerp.domain.user.service.MenuService;
 import org.example.tacoerp.global.security.CustomUserDetails;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 @Controller
@@ -20,6 +22,12 @@ public class SalaryController {
     private final SalaryService salaryService;
     private final EmployeeService employeeService;
     private final MenuService menuService;
+    private final AuditLogService auditLogService;
+
+    private String ipOf(ServerWebExchange exchange) {
+        return exchange.getRequest().getRemoteAddress() != null
+                ? exchange.getRequest().getRemoteAddress().getAddress().getHostAddress() : "unknown";
+    }
 
     @GetMapping
     public Mono<String> list(@AuthenticationPrincipal CustomUserDetails principal,
@@ -83,20 +91,48 @@ public class SalaryController {
     }
 
     @PostMapping
-    public Mono<String> create(@ModelAttribute Salary salary) {
+    public Mono<String> create(@ModelAttribute Salary salary,
+                                @AuthenticationPrincipal CustomUserDetails principal,
+                                ServerWebExchange exchange) {
         return salaryService.create(salary)
+                .flatMap(saved -> auditLogService.log(
+                        principal.getUserId(), principal.getUsername(),
+                        "CREATE", "SALARY", String.valueOf(saved.getId()),
+                        "급여 등록: 직원ID " + saved.getEmployeeId() + ", 지급월 " + saved.getPayMonth()
+                                + ", 실지급액 " + saved.getNetSalary(),
+                        ipOf(exchange)
+                ))
                 .thenReturn("redirect:/hr/salary");
     }
 
     @PostMapping("/{id}")
-    public Mono<String> update(@PathVariable Long id, @ModelAttribute Salary salary) {
+    public Mono<String> update(@PathVariable Long id, @ModelAttribute Salary salary,
+                                @AuthenticationPrincipal CustomUserDetails principal,
+                                ServerWebExchange exchange) {
         return salaryService.update(id, salary)
+                .flatMap(saved -> auditLogService.log(
+                        principal.getUserId(), principal.getUsername(),
+                        "UPDATE", "SALARY", String.valueOf(id),
+                        "급여 수정: 직원ID " + saved.getEmployeeId() + ", 지급월 " + saved.getPayMonth()
+                                + ", 실지급액 " + saved.getNetSalary(),
+                        ipOf(exchange)
+                ))
                 .thenReturn("redirect:/hr/salary");
     }
 
     @PostMapping("/{id}/delete")
-    public Mono<String> delete(@PathVariable Long id) {
-        return salaryService.delete(id)
+    public Mono<String> delete(@PathVariable Long id,
+                                @AuthenticationPrincipal CustomUserDetails principal,
+                                ServerWebExchange exchange) {
+        return salaryService.findById(id)
+                .flatMap(sal -> salaryService.delete(id)
+                        .then(auditLogService.log(
+                                principal.getUserId(), principal.getUsername(),
+                                "DELETE", "SALARY", String.valueOf(id),
+                                "급여 삭제: 직원ID " + sal.getEmployeeId() + ", 지급월 " + sal.getPayMonth(),
+                                ipOf(exchange)
+                        ))
+                )
                 .thenReturn("redirect:/hr/salary");
     }
 }
