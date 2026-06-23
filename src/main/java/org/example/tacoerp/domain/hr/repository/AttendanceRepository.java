@@ -11,4 +11,6 @@ public interface AttendanceRepository extends ReactiveCrudRepository<Attendance,
     Mono<Attendance> findByEmployeeIdAndWorkDate(Long employeeId, LocalDate workDate);
     Flux<Attendance> findByEmployeeIdAndWorkDateBetweenOrderByWorkDateDesc(Long employeeId, LocalDate start, LocalDate end);
     Flux<Attendance> findByWorkDateOrderByEmployeeId(LocalDate workDate);
+    Flux<Attendance> findByWorkDateBetweenOrderByWorkDateDescEmployeeIdAsc(LocalDate start, LocalDate end);
+    Flux<Attendance> findByStatusAndWorkDateBetweenOrderByWorkDateDesc(String status, LocalDate start, LocalDate end);
 }

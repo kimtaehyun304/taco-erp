@@ -28,16 +28,30 @@ public class AttendanceService {
         return attendanceRepository.findById(id);
     }
 
+    /** 팀장 이상: 전체 직원의 해당 월 근태 조회 */
+    public Flux<Attendance> findAllByMonth(LocalDate from, LocalDate to) {
+        return attendanceRepository.findByWorkDateBetweenOrderByWorkDateDescEmployeeIdAsc(from, to);
+    }
+
+    /** 팀장 이상: 전체 직원의 해당 월 지각 기록만 조회 */
+    public Flux<Attendance> findLateByMonth(LocalDate from, LocalDate to) {
+        return attendanceRepository.findByStatusAndWorkDateBetweenOrderByWorkDateDesc("LATE", from, to);
+    }
+
     public Mono<Attendance> checkIn(Long employeeId) {
         LocalDate today = LocalDate.now();
         return attendanceRepository.findByEmployeeIdAndWorkDate(employeeId, today)
                 .switchIfEmpty(Mono.defer(() -> {
+                    LocalDateTime now = LocalDateTime.now();
+                    // 09:00 이후 출근 시 지각 처리
+                    String status = (now.getHour() > 9 || (now.getHour() == 9 && now.getMinute() > 0))
+                            ? "LATE" : "NORMAL";
                     Attendance att = Attendance.builder()
                             .employeeId(employeeId)
                             .workDate(today)
-                            .checkIn(LocalDateTime.now())
-                            .status("NORMAL")
-                            .createdAt(LocalDateTime.now())
+                            .checkIn(now)
+                            .status(status)
+                            .createdAt(now)
                             .build();
                     return attendanceRepository.save(att);
                 }));
@@ -47,6 +61,15 @@ public class AttendanceService {
         return attendanceRepository.findByEmployeeIdAndWorkDate(employeeId, LocalDate.now())
                 .flatMap(att -> {
                     att.setCheckOut(LocalDateTime.now());
+                    return attendanceRepository.save(att);
+                });
+    }
+
+    /** 지각 사유 등록/수정 */
+    public Mono<Attendance> saveLateReason(Long id, String reason) {
+        return attendanceRepository.findById(id)
+                .flatMap(att -> {
+                    att.setLateReason(reason);
                     return attendanceRepository.save(att);
                 });
     }

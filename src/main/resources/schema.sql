@@ -116,6 +116,7 @@ CREATE TABLE IF NOT EXISTS attendances (
     check_out TIMESTAMP,
     status VARCHAR(20) DEFAULT 'NORMAL',
     note VARCHAR(255),
+    late_reason VARCHAR(500),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -137,6 +138,22 @@ CREATE TABLE IF NOT EXISTS leave_requests (
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     days DECIMAL(4,1) NOT NULL,
+    reason TEXT,
+    status VARCHAR(20) DEFAULT 'PENDING',
+    approved_by BIGINT,
+    approved_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS overtime_requests (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT NOT NULL,
+    work_date DATE NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    hours DECIMAL(4,1) NOT NULL,
+    overtime_type VARCHAR(20) DEFAULT 'WEEKDAY',
     reason TEXT,
     status VARCHAR(20) DEFAULT 'PENDING',
     approved_by BIGINT,

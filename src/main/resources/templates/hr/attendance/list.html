@@ -5,6 +5,8 @@
 <div th:replace="~{fragments/layout :: sidebar(${menus}, '/hr/attendance')}"></div>
 <div th:replace="~{fragments/layout :: topbar('근태 관리', ${currentUser})}"></div>
 <main id="main">
+
+  <!-- 헤더 -->
   <div class="d-flex align-items-center justify-content-between mb-3">
     <div class="page-title mb-0"><i class="bi bi-clock me-2 text-primary"></i>근태 관리</div>
     <div class="d-flex gap-2">
@@ -17,68 +19,274 @@
     </div>
   </div>
 
-  <!-- 필터 -->
-  <div class="card mb-3">
-    <div class="card-body py-3 px-4">
-      <form th:action="@{/hr/attendance}" method="get" class="d-flex gap-2 flex-wrap align-items-center">
-        <select name="employeeId" class="form-select" style="max-width:200px;">
-          <option value="">직원 선택</option>
-          <option th:each="emp : ${employees}" th:value="${emp.id}" th:text="${emp.name}"
-                  th:selected="${emp.id == selectedEmployeeId}">직원</option>
-        </select>
-        <input type="month" name="month" class="form-control" th:value="${month}" style="max-width:160px;"/>
-        <button type="submit" class="btn btn-primary">조회</button>
-      </form>
-    </div>
-  </div>
+  <!-- 탭 (팀장 이상만 전체현황 탭 표시) -->
+  <ul class="nav nav-tabs mb-3" th:if="${isManager}">
+    <li class="nav-item">
+      <a class="nav-link" th:classappend="${view == 'my' or view == null} ? 'active'"
+         th:href="@{/hr/attendance(month=${month},view='my')}">
+        <i class="bi bi-person me-1"></i>내 근태
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" th:classappend="${view == 'all'} ? 'active'"
+         th:href="@{/hr/attendance(month=${month},view='all')}">
+        <i class="bi bi-people me-1"></i>전체 현황
+      </a>
+    </li>
+  </ul>
 
-  <div class="card">
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-hover mb-0">
-          <thead>
-            <tr>
-              <th class="px-4">날짜</th>
-              <th>출근</th>
-              <th>퇴근</th>
-              <th>상태</th>
-              <th>비고</th>
-              <th class="text-center">관리</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr th:each="att : ${attendances}">
-              <td class="px-4 fw-semibold" th:text="${att.workDate}">-</td>
-              <td class="small" th:text="${att.checkIn != null ? #temporals.format(att.checkIn,'HH:mm') : '-'}">-</td>
-              <td class="small" th:text="${att.checkOut != null ? #temporals.format(att.checkOut,'HH:mm') : '-'}">-</td>
-              <td>
-                <span th:switch="${att.status}">
-                  <span th:case="'NORMAL'"      class="badge bg-success">정상</span>
-                  <span th:case="'LATE'"        class="badge bg-warning text-dark">지각</span>
-                  <span th:case="'EARLY_LEAVE'" class="badge bg-info">조기퇴근</span>
-                  <span th:case="'ABSENT'"      class="badge bg-danger">결근</span>
-                  <span th:case="*"             class="badge bg-secondary" th:text="${att.status}">-</span>
-                </span>
-              </td>
-              <td class="small text-muted" th:text="${att.note}">-</td>
-              <td class="text-center">
-                <form th:action="@{/hr/attendance/{id}/delete(id=${att.id})}" method="post" class="d-inline"
-                      onsubmit="return confirm('삭제하시겠습니까?')">
-                  <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-                </form>
-              </td>
-            </tr>
-            <tr th:if="${attendances == null or attendances.isEmpty()}">
-              <td colspan="6" class="text-center text-muted py-5">
-                <i class="bi bi-clock fs-2 d-block mb-2"></i>근태 기록이 없습니다.
-              </td>
-            </tr>
-          </tbody>
-        </table>
+  <!-- ======== 내 근태 탭 ======== -->
+  <div th:if="${view == 'my' or view == null or !isManager}">
+
+    <!-- 필터 -->
+    <div class="card mb-3">
+      <div class="card-body py-3 px-4">
+        <form th:action="@{/hr/attendance}" method="get" class="d-flex gap-2 flex-wrap align-items-center">
+          <input type="hidden" name="view" value="my"/>
+          <th:block th:if="${isManager}">
+            <select name="employeeId" class="form-select" style="max-width:200px;">
+              <option value="">직원 선택</option>
+              <option th:each="emp : ${employees}" th:value="${emp.id}" th:text="${emp.name}"
+                      th:selected="${emp.id == selectedEmployeeId}">직원</option>
+            </select>
+          </th:block>
+          <input type="month" name="month" class="form-control" th:value="${month}" style="max-width:160px;"/>
+          <button type="submit" class="btn btn-primary">조회</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead>
+              <tr>
+                <th class="px-4">날짜</th>
+                <th>출근</th>
+                <th>퇴근</th>
+                <th>상태</th>
+                <th>비고</th>
+                <th>지각 사유</th>
+                <th class="text-center">관리</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="att : ${attendances}">
+                <td class="px-4 fw-semibold" th:text="${att.workDate}">-</td>
+                <td class="small" th:text="${att.checkIn != null ? #temporals.format(att.checkIn,'HH:mm') : '-'}">-</td>
+                <td class="small" th:text="${att.checkOut != null ? #temporals.format(att.checkOut,'HH:mm') : '-'}">-</td>
+                <td>
+                  <span th:switch="${att.status}">
+                    <span th:case="'NORMAL'"      class="badge bg-success">정상</span>
+                    <span th:case="'LATE'"        class="badge bg-warning text-dark">지각</span>
+                    <span th:case="'EARLY_LEAVE'" class="badge bg-info">조기퇴근</span>
+                    <span th:case="'ABSENT'"      class="badge bg-danger">결근</span>
+                    <span th:case="*"             class="badge bg-secondary" th:text="${att.status}">-</span>
+                  </span>
+                </td>
+                <td class="small text-muted" th:text="${att.note}">-</td>
+                <td class="small">
+                  <!-- 지각인 경우 사유 표시 / 등록 버튼 -->
+                  <th:block th:if="${att.status == 'LATE'}">
+                    <span th:if="${att.lateReason != null and !att.lateReason.isBlank()}"
+                          class="text-secondary" th:text="${att.lateReason}">-</span>
+                    <button th:if="${att.lateReason == null or att.lateReason.isBlank()}"
+                            class="btn btn-sm btn-outline-warning"
+                            th:onclick="|openLateReasonModal(${att.id}, '', '${month}')|">
+                      <i class="bi bi-pencil me-1"></i>사유 등록
+                    </button>
+                    <button th:if="${att.lateReason != null and !att.lateReason.isBlank()}"
+                            class="btn btn-sm btn-link p-0 ms-1 text-muted"
+                            th:onclick="|openLateReasonModal(${att.id}, '[[${att.lateReason}]]', '${month}')|">
+                      <i class="bi bi-pencil-square"></i>
+                    </button>
+                  </th:block>
+                  <span th:if="${att.status != 'LATE'}" class="text-muted">-</span>
+                </td>
+                <td class="text-center">
+                  <form th:action="@{/hr/attendance/{id}/delete(id=${att.id})}" method="post" class="d-inline"
+                        onsubmit="return confirm('삭제하시겠습니까?')">
+                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                  </form>
+                </td>
+              </tr>
+              <tr th:if="${attendances == null or attendances.isEmpty()}">
+                <td colspan="7" class="text-center text-muted py-5">
+                  <i class="bi bi-clock fs-2 d-block mb-2"></i>근태 기록이 없습니다.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
+
+  <!-- ======== 전체 현황 탭 (팀장 이상) ======== -->
+  <div th:if="${isManager and view == 'all'}">
+
+    <!-- 필터 -->
+    <div class="card mb-3">
+      <div class="card-body py-3 px-4">
+        <form th:action="@{/hr/attendance}" method="get" class="d-flex gap-2 flex-wrap align-items-center">
+          <input type="hidden" name="view" value="all"/>
+          <input type="month" name="month" class="form-control" th:value="${month}" style="max-width:160px;"/>
+          <button type="submit" class="btn btn-primary">조회</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- 지각 현황 요약 -->
+    <div class="card mb-3 border-warning">
+      <div class="card-header bg-warning bg-opacity-10 fw-semibold">
+        <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+        지각 현황 — <span th:text="${month}"></span>
+        <span class="badge bg-warning text-dark ms-2" th:text="${lateAttendances != null ? lateAttendances.size() : 0} + '건'">0건</span>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th class="px-4">날짜</th>
+                <th>직원 ID</th>
+                <th>출근 시각</th>
+                <th>지각 사유</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="att : ${lateAttendances}">
+                <td class="px-4 fw-semibold" th:text="${att.workDate}">-</td>
+                <td>
+                  <span class="badge bg-secondary" th:text="'EMP-' + ${att.employeeId}">-</span>
+                </td>
+                <td class="small text-warning fw-semibold"
+                    th:text="${att.checkIn != null ? #temporals.format(att.checkIn,'HH:mm') : '-'}">-</td>
+                <td>
+                  <span th:if="${att.lateReason != null and !att.lateReason.isBlank()}"
+                        th:text="${att.lateReason}" class="small">-</span>
+                  <span th:if="${att.lateReason == null or att.lateReason.isBlank()}"
+                        class="badge bg-light text-muted border">미등록</span>
+                </td>
+              </tr>
+              <tr th:if="${lateAttendances == null or lateAttendances.isEmpty()}">
+                <td colspan="4" class="text-center text-muted py-4">
+                  <i class="bi bi-check-circle fs-4 d-block mb-1 text-success"></i>이번 달 지각 기록이 없습니다.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 전체 근태 기록 -->
+    <div class="card">
+      <div class="card-header fw-semibold">
+        <i class="bi bi-table me-2"></i>전체 근태 기록 — <span th:text="${month}"></span>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th class="px-4">날짜</th>
+                <th>직원 ID</th>
+                <th>출근</th>
+                <th>퇴근</th>
+                <th>상태</th>
+                <th>지각 사유</th>
+                <th>비고</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="att : ${allAttendances}">
+                <td class="px-4 fw-semibold" th:text="${att.workDate}">-</td>
+                <td class="small text-muted" th:text="'EMP-' + ${att.employeeId}">-</td>
+                <td class="small" th:text="${att.checkIn != null ? #temporals.format(att.checkIn,'HH:mm') : '-'}">-</td>
+                <td class="small" th:text="${att.checkOut != null ? #temporals.format(att.checkOut,'HH:mm') : '-'}">-</td>
+                <td>
+                  <span th:switch="${att.status}">
+                    <span th:case="'NORMAL'"      class="badge bg-success">정상</span>
+                    <span th:case="'LATE'"        class="badge bg-warning text-dark">지각</span>
+                    <span th:case="'EARLY_LEAVE'" class="badge bg-info">조기퇴근</span>
+                    <span th:case="'ABSENT'"      class="badge bg-danger">결근</span>
+                    <span th:case="*"             class="badge bg-secondary" th:text="${att.status}">-</span>
+                  </span>
+                </td>
+                <td class="small">
+                  <span th:if="${att.status == 'LATE' and att.lateReason != null and !att.lateReason.isBlank()}"
+                        th:text="${att.lateReason}">-</span>
+                  <span th:if="${att.status == 'LATE' and (att.lateReason == null or att.lateReason.isBlank())}"
+                        class="text-muted">미등록</span>
+                  <span th:if="${att.status != 'LATE'}" class="text-muted">-</span>
+                </td>
+                <td class="small text-muted" th:text="${att.note}">-</td>
+              </tr>
+              <tr th:if="${allAttendances == null or allAttendances.isEmpty()}">
+                <td colspan="7" class="text-center text-muted py-5">
+                  <i class="bi bi-clock fs-2 d-block mb-2"></i>근태 기록이 없습니다.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </main>
+
+<!-- 지각 사유 등록 모달 -->
+<div class="modal fade" id="lateReasonModal" tabindex="-1" aria-labelledby="lateReasonModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form id="lateReasonForm" method="post">
+        <div class="modal-header">
+          <h5 class="modal-title" id="lateReasonModalLabel"><i class="bi bi-pencil-square me-2 text-warning"></i>지각 사유 등록</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="닫기"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="lateReasonInput" class="form-label fw-semibold">사유 <span class="text-danger">*</span></label>
+            <textarea id="lateReasonInput" name="lateReason" class="form-control" rows="4"
+                      placeholder="지각 사유를 입력해주세요." required maxlength="500"></textarea>
+            <div class="form-text text-end"><span id="charCount">0</span> / 500자</div>
+          </div>
+          <input type="hidden" name="month" id="lateReasonMonth"/>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+          <button type="submit" class="btn btn-warning text-dark"><i class="bi bi-check-lg me-1"></i>등록</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <div th:replace="~{fragments/layout :: scripts}"></div>
+<script>
+function openLateReasonModal(attId, existingReason, month) {
+  const form = document.getElementById('lateReasonForm');
+  form.action = '/hr/attendance/' + attId + '/late-reason';
+  const textarea = document.getElementById('lateReasonInput');
+  textarea.value = existingReason || '';
+  document.getElementById('lateReasonMonth').value = month || '';
+  updateCharCount();
+  const modal = new bootstrap.Modal(document.getElementById('lateReasonModal'));
+  modal.show();
+  setTimeout(() => textarea.focus(), 300);
+}
+
+function updateCharCount() {
+  const textarea = document.getElementById('lateReasonInput');
+  document.getElementById('charCount').textContent = textarea.value.length;
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  document.getElementById('lateReasonInput').addEventListener('input', updateCharCount);
+});
+</script>
 </body>
 </html>

@@ -18,5 +18,6 @@ public class Attendance {
     private LocalDateTime checkOut;
     private String status; // NORMAL, LATE, EARLY_LEAVE, ABSENT
     private String note;
+    private String lateReason; // 지각 사유
     private LocalDateTime createdAt;
 }

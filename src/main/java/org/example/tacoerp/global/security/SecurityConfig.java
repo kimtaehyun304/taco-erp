@@ -76,6 +76,13 @@ public class SecurityConfig {
                         .pathMatchers(HttpMethod.GET, "/hr/leave", "/hr/leave/new").authenticated()
                         .pathMatchers(HttpMethod.POST, "/hr/leave").authenticated()
                         .pathMatchers(HttpMethod.POST, "/hr/leave/*/delete").authenticated()
+                        // 출근/퇴근/지각 사유 등록은 일반 직원도 가능
+                        .pathMatchers(HttpMethod.POST, "/hr/attendance/check-in", "/hr/attendance/check-out").authenticated()
+                        .pathMatchers(HttpMethod.POST, "/hr/attendance/*/late-reason").authenticated()
+                        // 초과근무 신청/취소는 일반 직원도 가능
+                        .pathMatchers(HttpMethod.GET, "/hr/overtime", "/hr/overtime/new").authenticated()
+                        .pathMatchers(HttpMethod.POST, "/hr/overtime").authenticated()
+                        .pathMatchers(HttpMethod.POST, "/hr/overtime/*/delete").authenticated()
                         // 휴가 승인/반려는 관리자(HR)만 가능
                         .pathMatchers(HttpMethod.POST, "/hr/leave/*/approve", "/hr/leave/*/reject").hasAnyRole("ADMIN", "HR")
                         // 나머지 HR 변경(직원/근태/급여 관리 등)은 관리자(HR) 전용
