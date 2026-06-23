@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('초과근무 수당 신청')}"></head>
+<body>
+<div th:replace="~{fragments/layout :: sidebar(${menus}, '/hr/overtime')}"></div>
+<div th:replace="~{fragments/layout :: topbar('초과근무 수당 신청', ${currentUser})}"></div>
+<main id="main">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="page-title mb-0">
+      <i class="bi bi-hourglass-split me-2 text-primary"></i>
+      <span th:text="${isManager} ? '초과근무 수당 관리' : '내 초과근무 신청 내역'">초과근무 수당</span>
+    </div>
+    <a th:href="@{/hr/overtime/new}" class="btn btn-primary">
+      <i class="bi bi-plus-lg me-1"></i>초과근무 신청
+    </a>
+  </div>
+
+  <!-- 관리자 필터 -->
+  <div class="card mb-3" th:if="${isManager}">
+    <div class="card-body py-3 px-4">
+      <form th:action="@{/hr/overtime}" method="get" class="d-flex gap-2">
+        <select name="status" class="form-select" style="max-width:160px;">
+          <option value="">전체 상태</option>
+          <option value="PENDING"  th:selected="${filterStatus=='PENDING'}">대기</option>
+          <option value="APPROVED" th:selected="${filterStatus=='APPROVED'}">승인</option>
+          <option value="REJECTED" th:selected="${filterStatus=='REJECTED'}">반려</option>
+        </select>
+        <button type="submit" class="btn btn-primary">필터</button>
+        <a th:href="@{/hr/overtime}" class="btn btn-outline-secondary">전체</a>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th class="px-4">직원</th>
+              <th>근무일</th>
+              <th>시작</th>
+              <th>종료</th>
+              <th>시간</th>
+              <th>유형</th>
+              <th>사유</th>
+              <th>상태</th>
+              <th>신청일</th>
+              <th class="text-center">관리</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="req : ${requests}">
+              <td class="px-4 small">
+                <span th:each="emp : ${employees}" th:if="${emp.id == req.employeeId}" th:text="${emp.name}">-</span>
+              </td>
+              <td class="small fw-semibold" th:text="${req.workDate}">-</td>
+              <td class="small" th:text="${req.startTime}">-</td>
+              <td class="small" th:text="${req.endTime}">-</td>
+              <td class="small fw-semibold text-primary" th:text="${req.hours} + 'h'">-</td>
+              <td>
+                <span th:switch="${req.overtimeType}">
+                  <span th:case="'WEEKDAY'"  class="badge bg-primary">평일</span>
+                  <span th:case="'WEEKEND'"  class="badge bg-info">주말</span>
+                  <span th:case="'HOLIDAY'"  class="badge bg-warning text-dark">공휴일</span>
+                  <span th:case="*"          class="badge bg-secondary" th:text="${req.overtimeType}">-</span>
+                </span>
+              </td>
+              <td class="small text-muted" th:text="${req.reason}">-</td>
+              <td>
+                <span th:switch="${req.status}">
+                  <span th:case="'PENDING'"   class="badge bg-warning text-dark">대기</span>
+                  <span th:case="'APPROVED'"  class="badge bg-success">승인</span>
+                  <span th:case="'REJECTED'"  class="badge bg-danger">반려</span>
+                  <span th:case="'CANCELLED'" class="badge bg-secondary">취소</span>
+                </span>
+              </td>
+              <td class="small text-muted"
+                  th:text="${req.createdAt != null ? #temporals.format(req.createdAt,'yyyy-MM-dd') : '-'}">-</td>
+              <td class="text-center">
+                <form th:if="${isManager and req.status == 'PENDING'}"
+                      th:action="@{/hr/overtime/{id}/approve(id=${req.id})}" method="post" class="d-inline">
+                  <button type="submit" class="btn btn-sm btn-success me-1" title="승인">
+                    <i class="bi bi-check-lg"></i>
+                  </button>
+                </form>
+                <form th:if="${isManager and req.status == 'PENDING'}"
+                      th:action="@{/hr/overtime/{id}/reject(id=${req.id})}" method="post" class="d-inline">
+                  <button type="submit" class="btn btn-sm btn-warning me-1" title="반려">
+                    <i class="bi bi-x-lg"></i>
+                  </button>
+                </form>
+                <form th:if="${isManager or req.status == 'PENDING'}"
+                      th:action="@{/hr/overtime/{id}/delete(id=${req.id})}" method="post" class="d-inline"
+                      onsubmit="return confirm('삭제하시겠습니까?')">
+                  <button type="submit" class="btn btn-sm btn-outline-danger" title="취소">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+            <tr th:if="${requests == null or requests.isEmpty()}">
+              <td colspan="10" class="text-center text-muted py-5">
+                <i class="bi bi-hourglass fs-2 d-block mb-2"></i>초과근무 신청 내역이 없습니다.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

@@ -89,6 +89,10 @@ public class SecurityConfig {
                         .pathMatchers(HttpMethod.POST, "/hr/**").hasAnyRole("ADMIN", "HR")
                         .pathMatchers(HttpMethod.PUT, "/hr/**").hasAnyRole("ADMIN", "HR")
                         .pathMatchers(HttpMethod.DELETE, "/hr/**").hasAnyRole("ADMIN", "HR")
+                        // 초과근무 신청/취소는 일반 직원도 가능
+                        .pathMatchers(HttpMethod.GET, "/hr/overtime", "/hr/overtime/new").authenticated()
+                        .pathMatchers(HttpMethod.POST, "/hr/overtime").authenticated()
+                        .pathMatchers(HttpMethod.POST, "/hr/overtime/*/delete").authenticated()
                         // 공지사항 작성/수정/삭제는 팀장 이상(MANAGER/HR/ADMIN)만 가능
                         .pathMatchers(HttpMethod.GET, "/board/notice/new", "/board/notice/*/edit").hasAnyRole("ADMIN", "HR", "MANAGER")
                         .pathMatchers(HttpMethod.POST, "/board/notice").hasAnyRole("ADMIN", "HR", "MANAGER")
