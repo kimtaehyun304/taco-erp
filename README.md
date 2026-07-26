@@ -23,4 +23,7 @@
 * 자료실
 * FAQ
 
+### 캡처
+<img width="435" height="637" alt="Image" src="https://github.com/user-attachments/assets/cc0f7cc4-3e78-44e4-ac0c-de7ac74c8623" />
 
+<img width="1913" height="864" alt="Image" src="https://github.com/user-attachments/assets/0354f7c9-cead-4ad3-adbf-f1e7af3d6d22" />
