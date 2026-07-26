@@ -1,7 +1,8 @@
 # claude·mcp로 코딩하는 프로젝트
 
 # 기술스택
-spring boot 3.5 (mvc, security), thymeLeaf, gradle, bootStrap
+* spring boot 3.5 (mvc, security), thymeLeaf, gradle, bootStrap
+* <a href="https://velog.io/@hyungman304/intellij-claude-%EC%97%B0%EB%8F%99%EB%B2%95%EA%B3%BC-%ED%9B%84%EA%B8%B0">intellij claude 연동법과 후기</a>
 
 # 기능
 ### 사용자/권한
@@ -21,3 +22,5 @@ spring boot 3.5 (mvc, security), thymeLeaf, gradle, bootStrap
 * 공지사항
 * 자료실
 * FAQ
+
+
